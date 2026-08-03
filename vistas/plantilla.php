@@ -34,8 +34,6 @@ session_start();
 
   <!-- Google Font -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
-</head>
-<body class="hold-transition skin-blue sidebar-mini">
 
 <!-- jQuery 3 -->
 <script src="vistas/bower_components/jquery/dist/jquery.min.js"></script>
@@ -74,9 +72,15 @@ session_start();
 <script src="vistas/dist/js/pages/dashboard.js"></script>
 <!-- AdminLTE for demo purposes -->
 <script src="vistas/dist/js/demo.js"></script>
+</head>
+
 <!-- ./wrapper -->
+<body class="hold-transition skin-blue sidebar-mini">
+
   <?php
-  if(isset($_SESSION['InciarSesion'])&& $_SESSION['IniciarSesion']=="ok"){
+  if(isset($_SESSION["iniciarSesion"])&& $_SESSION["iniciarSesion"]=="ok"){
+//if(isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok"){
+
    echo '<div class="wrapper">';
 
   include "modulos/cabecera.php";

@@ -1,5 +1,4 @@
 <?php
-
 class ControladorPlantilla
 {
 public function crtPlantilla()
