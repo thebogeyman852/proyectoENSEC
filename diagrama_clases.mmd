@@ -1,0 +1,147 @@
+classDiagram
+    direction TB
+
+    class ControladorPlantilla
+    class ControladorUsuarios
+    class ControladorCategorias
+    class ControladorCatalogos
+    class ControladorMateriales
+    class ControladorHerramientas
+    class ControladorMovimientos
+    class ControladorPedidos
+    class ControladorPagos
+
+    class ModeloUsuarios
+    class ModeloCategorias
+    class ModeloCatalogos
+    class ModeloMateriales
+    class ModeloHerramientas
+    class ModeloMovimientos
+    class ModeloPedidos
+    class ModeloPagos
+    class Conexion
+
+    class Usuario {
+        <<tabla>>
+        idusuario
+        nombre
+        usuario
+        password
+        perfil
+        foto
+        estado
+        ultimo_login
+    }
+    class Categoria {
+        <<tabla>>
+        idcategoria
+        nombre
+        descripcion
+    }
+    class Cliente {
+        <<tabla>>
+        idcliente
+        nombre
+        telefono
+        direccion
+    }
+    class Pedido {
+        <<tabla>>
+        idpedido
+        idusuario
+        idcliente
+        fecha_pedido
+        total
+        estado
+    }
+    class DetallePedido {
+        <<tabla>>
+        iddetalle_pedido
+        idpedido
+        idcategoria
+        cantidad
+        precio_unitario
+    }
+    class Pago {
+        <<tabla>>
+        idpago
+        idpedido
+        monto
+        metodo_pago
+        fecha_pago
+    }
+    class TipoMaterial {
+        <<tabla>>
+        idtipo_material
+        nombre
+        descripcion
+    }
+    class Proveedor {
+        <<tabla>>
+        idproveedor
+        nombre_proveedor
+        telefono
+        direccion
+    }
+    class Material {
+        <<tabla materiales>>
+        idmaterial
+        idtipo_material
+        idproveedor
+        nombre
+        unidad_medida
+        stock_actual
+    }
+    class DetalleMaterial {
+        <<tabla>>
+        iddetalle_material
+        idpedido
+        idmaterial
+        cantidad_usada
+    }
+    class Herramienta {
+        <<tabla>>
+        idherramienta
+        nombre
+        estado
+        stock
+    }
+    class Inventario {
+        <<tabla>>
+        idinventario
+        idusuario
+        idherramienta
+        tipo_movimiento
+        cantidad
+        fecha
+    }
+
+    ControladorUsuarios ..> ModeloUsuarios
+    ControladorCategorias ..> ModeloCategorias
+    ControladorCatalogos ..> ModeloCatalogos
+    ControladorMateriales ..> ModeloMateriales
+    ControladorHerramientas ..> ModeloHerramientas
+    ControladorMovimientos ..> ModeloMovimientos
+    ControladorPedidos ..> ModeloPedidos
+    ControladorPagos ..> ModeloPagos
+
+    ModeloUsuarios ..> Conexion
+    ModeloCategorias ..> Conexion
+    ModeloCatalogos ..> Conexion
+    ModeloMateriales ..> Conexion
+    ModeloHerramientas ..> Conexion
+    ModeloMovimientos ..> Conexion
+    ModeloPedidos ..> Conexion
+    ModeloPagos ..> Conexion
+
+    Pedido "0..*" --> "1" Usuario : idusuario
+    Pedido "0..*" --> "1" Cliente : idcliente
+    DetallePedido "0..*" --> "1" Pedido : idpedido
+    DetallePedido "0..*" --> "1" Categoria : idcategoria
+    Pago "0..*" --> "1" Pedido : idpedido
+    Material "0..*" --> "1" TipoMaterial : idtipo_material
+    Material "0..*" --> "1" Proveedor : idproveedor
+    DetalleMaterial "0..*" --> "1" Pedido : idpedido
+    DetalleMaterial "0..*" --> "1" Material : idmaterial
+    Inventario "0..*" --> "1" Usuario : idusuario
+    Inventario "0..*" --> "0..1" Herramienta : idherramienta

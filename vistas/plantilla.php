@@ -1,118 +1,82 @@
 <?php
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+  session_start();
+}
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>AdminLTE 2 | Dashboard</title>
-  <!-- Tell the browser to be responsive to screen width -->
-  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  <!-- Bootstrap 3.3.7 -->
-  <link rel="stylesheet" href="vistas/bower_components/bootstrap/dist/css/bootstrap.min.css">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="vistas/bower_components/font-awesome/css/font-awesome.min.css">
-  <!-- Ionicons -->
-  <link rel="stylesheet" href="vistas/bower_components/Ionicons/css/ionicons.min.css">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="vistas/dist/css/AdminLTE.css">
-  <!-- AdminLTE Skins. Choose a skin from the css/skins
-       folder instead of downloading all of them to reduce the load. -->
-  <link rel="stylesheet" href="vistas/dist/css/skins/_all-skins.min.css">
-  <!-- Morris chart -->
-  <link rel="stylesheet" href="vistas/bower_components/morris.js/morris.css">
-  <!-- jvectormap -->
-  <link rel="stylesheet" href="vistas/bower_components/jvectormap/jquery-jvectormap.css">
-  <!-- Date Picker -->
-  <link rel="stylesheet" href="vistas/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css">
-  <!-- Daterange picker -->
-  <link rel="stylesheet" href="vistas/bower_components/bootstrap-daterangepicker/daterangepicker.css">
-  <!-- bootstrap wysihtml5 - text editor -->
-  <link rel="stylesheet" href="vistas/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css">
+  <title>Star Admin | Dashboard</title>
+  <!-- plugins:css -->
+  <link rel="stylesheet" href="vistas/assets/vendors/iconfonts/mdi/css/materialdesignicons.min.css">
+  <link rel="stylesheet" href="vistas/assets/vendors/iconfonts/ionicons/dist/css/ionicons.css">
+  <link rel="stylesheet" href="vistas/assets/vendors/iconfonts/flag-icon-css/css/flag-icon.min.css">
+  <link rel="stylesheet" href="vistas/assets/vendors/css/vendor.bundle.base.css">
+  <link rel="stylesheet" href="vistas/assets/vendors/css/vendor.bundle.addons.css">
+  <!-- inject:css -->
+  <link rel="stylesheet" href="vistas/assets/css/shared/style.css">
+  <!-- endinject -->
+  <!-- Layout styles -->
+  <link rel="stylesheet" href="vistas/assets/css/demo_1/style.css">
+  <!-- End Layout styles -->
+  <link rel="shortcut icon" href="vistas/assets/images/favicon.ico" />
 
-  <!-- Google Font -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
-
-<!-- jQuery 3 -->
-<script src="vistas/bower_components/jquery/dist/jquery.min.js"></script>
-<!-- jQuery UI 1.11.4 -->
-<script src="vistas/bower_components/jquery-ui/jquery-ui.min.js"></script>
-<!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
-<script>
-  $.widget.bridge('uibutton', $.ui.button);
-</script>
-<!-- Bootstrap 3.3.7 -->
-<script src="vistas/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-<!-- Morris.js charts -->
-<script src="vistas/bower_components/raphael/raphael.min.js"></script>
-<script src="vistas/bower_components/morris.js/morris.min.js"></script>
-<!-- Sparkline -->
-<script src="vistas/bower_components/jquery-sparkline/dist/jquery.sparkline.min.js"></script>
-<!-- jvectormap -->
-<script src="vistas/plugins/jvectormap/jquery-jvectormap-1.2.2.min.js"></script>
-<script src="vistas/plugins/jvectormap/jquery-jvectormap-world-mill-en.js"></script>
-<!-- jQuery Knob Chart -->
-<script src="vistas/bower_components/jquery-knob/dist/jquery.knob.min.js"></script>
-<!-- daterangepicker -->
-<script src="vistas/bower_components/moment/min/moment.min.js"></script>
-<script src="vistas/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
-<!-- datepicker -->
-<script src="vistas/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
-<!-- Bootstrap WYSIHTML5 -->
-<script src="vistas/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js"></script>
-<!-- Slimscroll -->
-<script src="vistas/bower_components/jquery-slimscroll/jquery.slimscroll.min.js"></script>
-<!-- FastClick -->
-<script src="vistas/bower_components/fastclick/lib/fastclick.js"></script>
-<!-- AdminLTE App -->
-<script src="vistas/dist/js/adminlte.min.js"></script>
-<!-- AdminLTE dashboard demo (This is only for demo purposes) -->
-<script src="vistas/dist/js/pages/dashboard.js"></script>
-<!-- AdminLTE for demo purposes -->
-<script src="vistas/dist/js/demo.js"></script>
 </head>
 
-<!-- ./wrapper -->
-<body class="hold-transition skin-blue sidebar-mini">
+<body>
+<div class="container-scroller">
+<?php
+if(isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok") {
 
-  <?php
-  if(isset($_SESSION["iniciarSesion"])&& $_SESSION["iniciarSesion"]=="ok"){
-//if(isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok"){
+    // 1. Navbar superior fija
+    include "modulos/cabecera.php";
+    
+    // 2. Contenedor principal de página (¡Clave para Star Admin!)
+    echo '<div class="container-fluid page-body-wrapper">';
+    
+    // Sidebar (Menú lateral)
+    include "modulos/menu.php";
+    
+    // Enrutamiento del contenido central
+   if (isset($_GET["ruta"])) {
+    $rutas = array(
+        "inicio", "usuarios", "categorias", "materiales", "herramientas",
+        "movimientos", "clientes", "proveedores", "tipos-material",
+        "pedidos", "pagos", "salir"
+    );
 
-   echo '<div class="wrapper">';
-
-  include "modulos/cabecera.php";
-  include "modulos/menu.php";
-  if (isset($_GET["ruta"])) {
-    if ($_GET["ruta"]== "inicio"||
-        $_GET["ruta"]== "usuarios"||
-        $_GET["ruta"]== "categorias"||
-        $_GET["ruta"]== "productos"||
-        $_GET["ruta"]== "clientes"||
-        $_GET["ruta"]== "ventas"||
-        $_GET["ruta"]== "reportes"||
-        $_GET["ruta"]== "salir"){
-    include "modulos/".$_GET["ruta"].".php";
-    }else{
-    include "modulos/404.php";
+    if (in_array($_GET["ruta"], $rutas, true)) {
+        if (in_array($_GET["ruta"], array("clientes", "proveedores", "tipos-material"), true)) {
+            include "vistas/modulos/catalogo.php";
+        } else {
+            include "vistas/modulos/" . $_GET["ruta"] . ".php";
+        }
+    } else {
+        include "vistas/modulos/404.php";
     }
-    }else{
-      include "modulos/inicio.php";
-    }
-
-    include "modulos/footer.php";
-    echo '</div>';
-}else{
-include "modulos/login.php";
+} else {
+    include "vistas/modulos/inicio.php";
+}
+    echo '</div>'; // Cierre de page-body-wrapper
+    
+} else {
+    include "modulos/login.php";
 }
 ?>
-}
-<div class="wrapper">
-</div>
-  <script src="vistas/js/plantilla.js"></script>
+</div> <!-- Cierre de container-scroller -->
 
+<!-- plugins:js -->
+<script src="vistas/assets/vendors/js/vendor.bundle.base.js"></script>
+<script src="vistas/assets/vendors/js/vendor.bundle.addons.js"></script>
+<!-- inject:js -->
+<script src="vistas/assets/js/shared/off-canvas.js"></script>
+<script src="vistas/assets/js/shared/misc.js"></script>
+<!-- Custom js for this page-->
+<script src="vistas/assets/js/demo_1/dashboard.js"></script>
+<script src="vistas/assets/js/shared/jquery.cookie.js" type="text/javascript"></script>
+<script src="vistas/js/plantilla.js"></script>
 
 </body>
 </html>
