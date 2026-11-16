@@ -5,6 +5,10 @@ class ControladorUsuarios
     public function crtIngresoUsuario()
     {
         if (isset($_POST["ingUsuario"], $_POST["ingPassword"])) {
+            if (!self::csrfValido()) {
+                echo '<div class="alert alert-danger">La sesión del formulario venció. Recarga la página.</div>';
+                return;
+            }
             if (
                 preg_match('/^[a-zA-Z0-9]+$/', $_POST["ingUsuario"]) &&
                 preg_match('/^[a-zA-Z0-9]+$/', $_POST["ingPassword"])
@@ -25,12 +29,19 @@ class ControladorUsuarios
                     $respuesta["usuario"] === $_POST["ingUsuario"] &&
                     $passwordValida
                 ) {
+                    $recuperacionId = ControladorRecuperacion::ctrForzarCambioLogin($respuesta);
+                    if ((int) ($respuesta["debe_cambiar_password"] ?? 0) === 1 && $recuperacionId === null) {
+                        echo '<br><div class="alert alert-danger">La contraseña temporal venció o ya se usó. Solicita otra recuperación.</div>';
+                        return;
+                    }
                     if ($informacionPassword["algo"] === null || password_needs_rehash($passwordAlmacenada, PASSWORD_DEFAULT)) {
                         ModeloUsuarios::mdlActualizarPassword(
                             (int) $respuesta["idusuario"],
                             password_hash($_POST["ingPassword"], PASSWORD_DEFAULT)
                         );
                     }
+                    session_regenerate_id(true);
+                    $_SESSION["csrf_token"] = bin2hex(random_bytes(32));
                     ModeloUsuarios::mdlActualizarUltimoLogin((int) $respuesta["idusuario"]);
                     $_SESSION["idusuario"] = (int) $respuesta["idusuario"];
                     $_SESSION["usuario"] = $respuesta["usuario"];
@@ -38,6 +49,12 @@ class ControladorUsuarios
                     $_SESSION["perfil"] = $respuesta["perfil"];
                     $_SESSION["foto"] = $respuesta["foto"];
                     $_SESSION["iniciarSesion"] = "ok";
+                    if ($recuperacionId !== null) {
+                        $_SESSION["requiereCambioPassword"] = true;
+                        $_SESSION["idSolicitudRecuperacion"] = $recuperacionId;
+                        echo '<script>window.location = "index.php?ruta=cambiar-password";</script>';
+                        return;
+                    }
                     echo '<script>
                         window.location = "index.php?ruta=inicio";
                     </script>';
@@ -58,14 +75,20 @@ class ControladorUsuarios
         if (!isset($_POST["crearPrimerUsuario"])) {
             return;
         }
+        if (!self::csrfValido()) {
+            self::mostrarMensajeAcceso("La sesión del formulario venció. Recarga la página e inténtalo otra vez.");
+            return;
+        }
 
         $nombre = trim((string) ($_POST["primerNombre"] ?? ""));
         $usuario = trim((string) ($_POST["primerUsuario"] ?? ""));
         $password = (string) ($_POST["primerPassword"] ?? "");
+        $correo = strtolower(trim((string) ($_POST["primerCorreo"] ?? "")));
         if (
             $nombre === "" || mb_strlen($nombre) > 150 ||
             !preg_match('/^[a-zA-Z0-9]+$/', $usuario) || mb_strlen($usuario) > 50 ||
-            !preg_match('/^[a-zA-Z0-9]{8,72}$/', $password)
+            !preg_match('/^[a-zA-Z0-9]{8,72}$/', $password) ||
+            !filter_var($correo, FILTER_VALIDATE_EMAIL) || !preg_match('/@gmail\.com$/i', $correo)
         ) {
             self::mostrarMensajeAcceso("Ingresa un nombre, usuario y contraseña válidos (mínimo 8 caracteres).");
             return;
@@ -75,7 +98,8 @@ class ControladorUsuarios
             ModeloUsuarios::mdlCrearPrimerUsuario(array(
                 "nombre" => $nombre,
                 "usuario" => $usuario,
-                "password" => password_hash($password, PASSWORD_DEFAULT)
+                "password" => password_hash($password, PASSWORD_DEFAULT),
+                "correo" => $correo
             ));
             self::mostrarMensajeAcceso("Administrador creado. Ya puedes iniciar sesión.");
         } catch (InvalidArgumentException $error) {
@@ -92,12 +116,21 @@ class ControladorUsuarios
 
    static public function ctrCrearUsuario() {
         if (isset($_POST["nuevoNombre"], $_POST["nuevoUsuario"], $_POST["nuevoPassword"], $_POST["nuevoPerfil"])) {
-            if (preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoNombre"]) &&
+           if (($_SESSION["perfil"] ?? "") !== "Administrador") {
+               self::redirigirUsuario("error", "Solo un administrador puede crear usuarios.");
+           }
+           if (!self::csrfValido()) {
+               self::mostrarMensajeAcceso("La sesión del formulario venció. Recarga la página e inténtalo otra vez.");
+               return;
+           }
+           if (preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoNombre"]) &&
                 preg_match('/^[a-zA-Z0-9]+$/', $_POST["nuevoUsuario"]) &&
                 preg_match('/^[a-zA-Z0-9]+$/', $_POST["nuevoPassword"]) &&
                 mb_strlen($_POST["nuevoNombre"]) <= 150 &&
                 mb_strlen($_POST["nuevoUsuario"]) <= 50 &&
                 mb_strlen($_POST["nuevoPassword"]) <= 72 &&
+                filter_var($_POST["nuevoCorreo"] ?? "", FILTER_VALIDATE_EMAIL) &&
+                preg_match('/@gmail\.com$/i', $_POST["nuevoCorreo"]) &&
                 in_array($_POST["nuevoPerfil"], array("Administrador", "Especial", "Vendedor"), true)){
 
                 // ==========================================
@@ -146,7 +179,8 @@ class ControladorUsuarios
                                 "usuario" => $_POST["nuevoUsuario"],
                                 "password" => $password,
                                 "perfil" => $_POST["nuevoPerfil"],
-                                "foto" => $ruta);
+                                "foto" => $ruta,
+                                "correo" => strtolower(trim($_POST["nuevoCorreo"])));
 
                 try {
                     $respuesta = ModeloUsuarios::mdlIngresarUsuario($tabla, $datos);
@@ -178,6 +212,12 @@ class ControladorUsuarios
         $idUsuario = filter_var($_POST["idusuario"] ?? null, FILTER_VALIDATE_INT);
 
         try {
+            if (($_SESSION["perfil"] ?? "") !== "Administrador") {
+                throw new InvalidArgumentException("Solo un administrador puede administrar usuarios.");
+            }
+            if (!self::csrfValido()) {
+                throw new InvalidArgumentException("La sesión del formulario venció. Recarga la página e inténtalo otra vez.");
+            }
             if ($accion === "estado") {
                 $estado = filter_var($_POST["estado"] ?? null, FILTER_VALIDATE_INT);
                 if ($idUsuario === false || $idUsuario < 1 || !in_array($estado, array(0, 1), true)) {
@@ -195,16 +235,31 @@ class ControladorUsuarios
                     throw new InvalidArgumentException("No puedes eliminar tu propia cuenta.");
                 }
                 ModeloUsuarios::mdlBorrarUsuario($idUsuario);
+            } elseif ($accion === "aprobar-recuperacion") {
+                $idSolicitud = filter_var($_POST["id_solicitud"] ?? null, FILTER_VALIDATE_INT);
+                if ($idSolicitud === false || $idSolicitud < 1) {
+                    throw new InvalidArgumentException("La solicitud de recuperación no es válida.");
+                }
+                ControladorRecuperacion::ctrAprobar($idSolicitud, (int) $_SESSION["idusuario"]);
+            } elseif ($accion === "rechazar-recuperacion") {
+                $idSolicitud = filter_var($_POST["id_solicitud"] ?? null, FILTER_VALIDATE_INT);
+                if ($idSolicitud === false || $idSolicitud < 1) {
+                    throw new InvalidArgumentException("La solicitud de recuperación no es válida.");
+                }
+                ModeloRecuperacion::mdlRechazar($idSolicitud, (int) $_SESSION["idusuario"]);
             } elseif ($accion === "editar") {
                 $nombre = trim((string) ($_POST["nombre"] ?? ""));
                 $usuario = trim((string) ($_POST["usuario"] ?? ""));
                 $perfil = trim((string) ($_POST["perfil"] ?? ""));
+                $correo = strtolower(trim((string) ($_POST["correo"] ?? "")));
                 $password = trim((string) ($_POST["password"] ?? ""));
                 if (
                     $idUsuario === false || $idUsuario < 1 ||
                     $nombre === "" || mb_strlen($nombre) > 150 ||
                     $usuario === "" || mb_strlen($usuario) > 50 ||
                     !preg_match('/^[a-zA-Z0-9]+$/', $usuario) ||
+                    !filter_var($correo, FILTER_VALIDATE_EMAIL) ||
+                    !preg_match('/@gmail\.com$/i', $correo) ||
                     !in_array($perfil, array("Administrador", "Especial", "Vendedor"), true) ||
                     ($password !== "" && !preg_match('/^[a-zA-Z0-9]{1,72}$/', $password))
                 ) {
@@ -214,6 +269,7 @@ class ControladorUsuarios
                     "idusuario" => $idUsuario,
                     "nombre" => $nombre,
                     "usuario" => $usuario,
+                    "correo" => $correo,
                     "perfil" => $perfil,
                     "password" => $password === "" ? "" : password_hash($password, PASSWORD_DEFAULT)
                 ));
@@ -226,6 +282,8 @@ class ControladorUsuarios
             self::redirigirUsuario("error", $error->getMessage());
         } catch (PDOException $error) {
             self::redirigirUsuario("error", "No se pudo guardar el usuario. Puede haber registros asociados a su cuenta.");
+        } catch (RuntimeException $error) {
+            self::redirigirUsuario("error", $error->getMessage());
         }
     }
 
@@ -234,5 +292,12 @@ class ControladorUsuarios
         $_SESSION["mensaje"] = array("tipo" => $tipo, "texto" => $mensaje);
         header("Location: index.php?ruta=usuarios");
         exit;
+    }
+
+    private static function csrfValido()
+    {
+        $token = $_POST["csrf_token"] ?? null;
+        return is_string($token) &&
+            hash_equals((string) ($_SESSION["csrf_token"] ?? ""), $token);
     }
 }

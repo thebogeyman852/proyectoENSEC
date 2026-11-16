@@ -19,17 +19,22 @@ $escaparHerramienta = static function ($valor) {
       <div class="card-body">
         <form method="post" class="form-row">
           <input type="hidden" name="accionHerramienta" value="crear">
-          <div class="form-group col-md-5">
+          <input type="hidden" name="csrf_token" value="<?php echo $escaparHerramienta($_SESSION["csrf_token"] ?? ""); ?>">
+          <div class="form-group col-md-3">
+            <label for="herramienta-codigo">Código</label>
+            <input id="herramienta-codigo" class="form-control" name="codigo" maxlength="50" required>
+          </div>
+          <div class="form-group col-md-4">
             <label for="herramienta-nombre">Nombre</label>
             <input id="herramienta-nombre" class="form-control" name="nombre" maxlength="150" required>
           </div>
-          <div class="form-group col-md-4">
+          <div class="form-group col-md-3">
             <label for="herramienta-estado">Estado</label>
             <input id="herramienta-estado" class="form-control" name="estado" value="Disponible" maxlength="50" required>
           </div>
-          <div class="form-group col-md-3">
-            <label for="herramienta-stock">Stock inicial</label>
-            <input id="herramienta-stock" type="number" class="form-control" name="stock" min="0" value="1" required>
+          <div class="form-group col-md-2">
+            <label>Stock inicial</label>
+            <p class="form-control-static">0. Registra una entrada desde Movimientos para añadir existencias.</p>
           </div>
           <div class="col-12"><button class="btn btn-primary" type="submit">Guardar herramienta</button></div>
         </form>
@@ -38,24 +43,30 @@ $escaparHerramienta = static function ($valor) {
     <div class="card">
       <div class="card-body table-responsive">
         <table class="table table-bordered table-striped">
-          <thead><tr><th>Nombre</th><th>Estado</th><th>Stock</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Código</th><th>Nombre</th><th>Estado</th><th>Stock (solo lectura)</th><th>Acciones</th></tr></thead>
           <tbody>
+            <?php if (!$herramientas) { ?>
+              <tr><td colspan="5" class="text-center">No hay herramientas registradas.</td></tr>
+            <?php } ?>
             <?php foreach ($herramientas as $herramienta) {
               $formId = "editar-herramienta-" . (int) $herramienta["idherramienta"];
             ?>
               <tr>
+                <td><input class="form-control" name="codigo" form="<?php echo $formId; ?>" value="<?php echo $escaparHerramienta($herramienta["codigo"] ?? ""); ?>" placeholder="Asignar código" maxlength="50" required></td>
                 <td><input class="form-control" name="nombre" form="<?php echo $formId; ?>" value="<?php echo $escaparHerramienta($herramienta["nombre"]); ?>" maxlength="150" required></td>
                 <td><input class="form-control" name="estado" form="<?php echo $formId; ?>" value="<?php echo $escaparHerramienta($herramienta["estado"]); ?>" maxlength="50" required></td>
-                <td><input type="number" class="form-control" name="stock" form="<?php echo $formId; ?>" value="<?php echo (int) $herramienta["stock"]; ?>" min="0" required></td>
+                <td><?php echo (int) $herramienta["stock"]; ?></td>
                 <td>
                   <form id="<?php echo $formId; ?>" method="post">
                     <input type="hidden" name="accionHerramienta" value="editar">
                     <input type="hidden" name="idherramienta" value="<?php echo (int) $herramienta["idherramienta"]; ?>">
+                    <input type="hidden" name="csrf_token" value="<?php echo $escaparHerramienta($_SESSION["csrf_token"] ?? ""); ?>">
                     <button class="btn btn-warning btn-sm" type="submit">Guardar</button>
                   </form>
                   <form method="post" onsubmit="return confirm('¿Eliminar esta herramienta?');">
                     <input type="hidden" name="accionHerramienta" value="eliminar">
                     <input type="hidden" name="idherramienta" value="<?php echo (int) $herramienta["idherramienta"]; ?>">
+                    <input type="hidden" name="csrf_token" value="<?php echo $escaparHerramienta($_SESSION["csrf_token"] ?? ""); ?>">
                     <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
                   </form>
                 </td>

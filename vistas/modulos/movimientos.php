@@ -22,6 +22,8 @@ $escaparMovimiento = static function ($valor) {
           <p>Registra una herramienta antes de ingresar movimientos de inventario.</p>
         <?php } else { ?>
           <form method="post" class="form-row">
+            <input type="hidden" name="csrf_token" value="<?php echo $escaparMovimiento($_SESSION["csrf_token"] ?? ""); ?>">
+            <input type="hidden" name="id_solicitud" value="<?php echo bin2hex(random_bytes(16)); ?>">
             <div class="form-group col-md-5">
               <label for="movimiento-herramienta">Herramienta</label>
               <select id="movimiento-herramienta" name="idHerramienta" class="form-control" required>
@@ -44,6 +46,10 @@ $escaparMovimiento = static function ($valor) {
               <label for="movimiento-cantidad">Cantidad</label>
               <input id="movimiento-cantidad" type="number" name="cantidadMovimiento" class="form-control" min="1" step="1" required>
             </div>
+            <div class="form-group col-md-10">
+              <label for="movimiento-motivo">Motivo</label>
+              <input id="movimiento-motivo" type="text" name="motivo" class="form-control" maxlength="255" required>
+            </div>
             <div class="col-md-2 align-self-end mb-3">
               <button type="submit" class="btn btn-primary">Registrar</button>
             </div>
@@ -55,8 +61,11 @@ $escaparMovimiento = static function ($valor) {
       <div class="card-header">Historial (los movimientos son registros permanentes)</div>
       <div class="card-body table-responsive">
         <table class="table table-bordered table-striped">
-          <thead><tr><th>Fecha</th><th>Herramienta</th><th>Movimiento</th><th>Cantidad</th><th>Usuario</th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Herramienta</th><th>Movimiento</th><th>Cantidad</th><th>Usuario</th><th>Motivo</th></tr></thead>
           <tbody>
+            <?php if (!$movimientos) { ?>
+              <tr><td colspan="6" class="text-center">No hay movimientos registrados.</td></tr>
+            <?php } ?>
             <?php foreach ($movimientos as $movimiento) { ?>
               <tr>
                 <td><?php echo $escaparMovimiento($movimiento["fecha"]); ?></td>
@@ -64,6 +73,7 @@ $escaparMovimiento = static function ($valor) {
                 <td><?php echo $escaparMovimiento($movimiento["tipo_movimiento"]); ?></td>
                 <td><?php echo (int) $movimiento["cantidad"]; ?></td>
                 <td><?php echo $escaparMovimiento($movimiento["nombre_usuario"]); ?></td>
+                <td><?php echo $escaparMovimiento($movimiento["motivo"] ?? "Histórico sin motivo registrado"); ?></td>
               </tr>
             <?php } ?>
           </tbody>

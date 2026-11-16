@@ -39,26 +39,31 @@ if(isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok") {
     // Sidebar (Menú lateral)
     include "modulos/menu.php";
     
+    echo '<div class="main-panel">';
+
     // Enrutamiento del contenido central
-   if (isset($_GET["ruta"])) {
+    $rutaActual = $_GET["ruta"] ?? null;
     $rutas = array(
-        "inicio", "usuarios", "categorias", "materiales", "herramientas",
-        "movimientos", "clientes", "proveedores", "tipos-material",
-        "pedidos", "pagos", "salir"
+        "inicio", "usuarios", "categorias", "productos", "materiales", "herramientas",
+        "movimientos", "inventario", "compras", "reportes", "clientes", "proveedores", "tipos-material",
+        "pedidos", "pagos", "inventario", "auditoria", "cambiar-password", "salir"
     );
 
-    if (in_array($_GET["ruta"], $rutas, true)) {
-        if (in_array($_GET["ruta"], array("clientes", "proveedores", "tipos-material"), true)) {
+    if (!empty($_SESSION["requiereCambioPassword"]) && $rutaActual !== "salir") {
+        include "vistas/modulos/cambiar-password.php";
+    } elseif ($rutaActual !== null && in_array($rutaActual, $rutas, true)) {
+        if (in_array($rutaActual, array("clientes", "proveedores", "tipos-material"), true)) {
             include "vistas/modulos/catalogo.php";
         } else {
-            include "vistas/modulos/" . $_GET["ruta"] . ".php";
+            include "vistas/modulos/" . $rutaActual . ".php";
         }
-    } else {
+    } elseif ($rutaActual !== null) {
         include "vistas/modulos/404.php";
     }
-} else {
-    include "vistas/modulos/inicio.php";
-}
+    if ($rutaActual === null && empty($_SESSION["requiereCambioPassword"])) {
+        include "vistas/modulos/inicio.php";
+    }
+    echo '</div>'; // Cierre de main-panel
     echo '</div>'; // Cierre de page-body-wrapper
     
 } else {

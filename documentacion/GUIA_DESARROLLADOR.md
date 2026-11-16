@@ -1,6 +1,6 @@
 # Guía sencilla para desarrollar y mantener el sistema
 
-Esta guía explica cómo arrancar el proyecto, cómo se conectan sus partes, qué cambió al usar la base de datos `sistemainventario_v2` y cómo aprender a mantenerlo por cuenta propia. Está escrita para leerla junto al código y probar cada concepto en un entorno local.
+Esta guía explica cómo arrancar el proyecto, cómo se conectan sus partes, qué cambió al usar la base de datos `sistemainventario_v3` y cómo aprender a mantenerlo por cuenta propia. Está escrita para leerla junto al código y probar cada concepto en un entorno local.
 
 ## 1. ¿Qué hace la aplicación?
 
@@ -56,14 +56,14 @@ Es mejor incorporar estas herramientas de una en una, junto con una configuraci�
 ## 3. Preparar una copia local
 
 1. Inicia Apache y MySQL desde XAMPP.
-2. Crea o selecciona la base `sistemainventario_v2`.
-3. En phpMyAdmin, importa `sistemainventario_v2.sql`.
+2. Crea o selecciona la base `sistemainventario_v3`.
+3. En phpMyAdmin, importa `sistemainventario_v3.sql`.
 4. Abre `modelos/conexion.php` y confirma que host, base, usuario y contraseña coinciden con la instalación local.
 5. Coloca el proyecto dentro de la carpeta pública de Apache. En este entorno, la carpeta es `C:\xampp\htdocs\venta2026zabala`.
 6. Abre `http://localhost/venta2026zabala/` en el navegador.
 7. Si la tabla `usuario` está vacía, la pantalla de acceso ofrece crear la primera cuenta administradora.
 
-La conexión actual usa `localhost`, base `sistemainventario_v2`, usuario `root` y contraseña vacía, que es una configuración local de XAMPP. **No es una configuración apropiada para publicar el sistema en Internet.**
+La conexión actual usa `localhost`, base `sistemainventario_v3`, usuario `root` y contraseña vacía, que es una configuración local de XAMPP. **No es una configuración apropiada para publicar el sistema en Internet.**
 
 Antes de importar el dump en una base que ya tenga información, crea una copia de respaldo y verifica qué hará la importación. El archivo SQL describe tablas y relaciones; no incluye registros que deban migrarse automáticamente desde una base anterior.
 
@@ -87,7 +87,7 @@ Ejemplo: al registrar un pago, el navegador envía un formulario a `index.php?ru
 | `controladores/` | Valida solicitudes y coordina las operaciones. |
 | `modelos/` | Lee y modifica la base de datos mediante PDO. |
 | `modelos/conexion.php` | Configura la conexión a la base de datos. |
-| `sistemainventario_v2.sql` | Define el esquema actual y sus claves foráneas. |
+| `sistemainventario_v3.sql` | Define el esquema actual y sus claves foráneas. |
 | `FLUJO_Y_DIAGRAMA.md` y `diagrama_clases.mmd` | Resumen del flujo y relaciones principales. |
 
 ### Rutas de la aplicación
@@ -99,13 +99,14 @@ Las rutas se envían como `index.php?ruta=...`. La plantilla utiliza una lista p
 | `inicio` | Indicadores del panel | Herramientas, materiales, pedidos e inventario |
 | `usuarios` | Administración de cuentas | `usuario` |
 | `categorias` | Categorías | `categoria` |
+| `productos` | Catálogo de productos y stock | `productos`, `categoria` |
 | `clientes` | Clientes | `cliente` |
 | `proveedores` | Proveedores | `proveedor` |
 | `tipos-material` | Tipos de material | `tipo_material` |
 | `materiales` | Materiales y stock decimal | `materiales`, `tipo_material`, `proveedor` |
 | `herramientas` | Herramientas y stock entero | `herramienta` |
 | `movimientos` | Entradas y salidas de herramientas | `inventario`, `herramienta`, `usuario` |
-| `pedidos` | Pedidos, detalles y materiales usados | `pedido`, `detalle_pedido`, `detalle_material` |
+| `pedidos` | Pedidos, productos solicitados, materiales planificados y consumos reales | `pedido`, `detalle_pedido`, `detalle_material`, `materiales`, `kardex` |
 | `pagos` | Pagos y saldos | `pagos`, `pedido`, `cliente` |
 
 Las rutas de clientes, proveedores y tipos de material comparten `vistas/modulos/catalogo.php`. El catálogo selecciona su configuración a partir de la ruta permitida.
@@ -115,13 +116,13 @@ Las rutas de clientes, proveedores y tipos de material comparten `vistas/modulos
 Las tablas centrales se relacionan así:
 
 - Un pedido pertenece a un cliente y al usuario que lo registró.
-- Cada línea de `detalle_pedido` pertenece a un pedido y referencia una categoría.
+- Cada línea de `detalle_pedido` pertenece a un pedido y referencia un producto.
 - Un pago pertenece a un pedido.
 - Cada material pertenece a un tipo y un proveedor.
 - `detalle_material` registra cuánto material se asoció a cada pedido.
 - El stock de herramientas está en `herramienta`; `inventario` registra quién hizo una entrada o salida.
 
-**Límite importante:** el esquema recibido no tiene una tabla de productos ni una relación de la línea del pedido con un artículo. Por eso el sistema no puede manejar un catálogo de productos individuales: el detalle del pedido usa categorías, cantidades y precios. Para vender productos concretos, primero hay que acordar y añadir la entidad y la relación a la base de datos, y después implementar su CRUD.
+Crear, editar o cambiar el estado de un pedido no altera stock de productos o materiales. `detalle_material` guarda la planificación; la salida física se registra en `kardex` cuando el material se utiliza. El precio de cada línea se conserva en `detalle_pedido`, aunque cambie después el precio del catálogo.
 
 La base distingue dos inventarios:
 
@@ -140,7 +141,7 @@ Los prefijos ayudan a encontrar cada capa:
 
 ### Conexión y entrada de la aplicación
 
-- `Conexion::conectar()` — `modelos/conexion.php`: abre PDO contra `sistemainventario_v2`, establece `utf8mb4` y activa excepciones de PDO para que los errores SQL no parezcan operaciones exitosas.
+- `Conexion::conectar()` — `modelos/conexion.php`: abre PDO contra `sistemainventario_v3`, establece `utf8mb4` y activa excepciones de PDO para que los errores SQL no parezcan operaciones exitosas.
 - `index.php`: carga controladores/modelos e inicia la sesión. Si llega un POST autenticado, delega la escritura según la ruta antes de producir HTML; esto permite redirigir sin el error de encabezados ya enviados.
 - `ControladorPlantilla::crtPlantilla()` y `vistas/plantilla.php`: muestran login o navegación autenticada y limitan las rutas disponibles.
 
@@ -148,20 +149,26 @@ Los prefijos ayudan a encontrar cada capa:
 
 - `ControladorCatalogos::ctrMostrar($recurso)` pide al modelo el listado del catálogo elegido.
 - `ControladorCatalogos::ctrProcesar($recurso)` resuelve crear, editar o eliminar; valida campos e identificadores; y guarda un mensaje para mostrar después de redirigir.
-- `ModeloCatalogos::mdlMostrar()`, `mdlIngresar()`, `mdlEditar()` y `mdlBorrar()` SQL común.hacen el 
+- `ModeloCatalogos::mdlMostrar()`, `mdlIngresar()`, `mdlEditar()` y `mdlBorrar()` reutilizan la configuración permitida para consultar o modificar cada catálogo.
 - `ModeloCatalogos::configuracion()` contiene una lista cerrada de tablas, claves y campos. Así el nombre de la tabla no se toma directamente de un formulario.
 
 Los nombres de tablas y campos son SQL, no valores normales: no pueden sustituirse con parámetros `:nombre` de PDO. Por eso la configuración permitida es esencial; no se debe reemplazar por el nombre recibido libremente desde el navegador.
 
+### Productos
+
+- `ControladorProductos::ctrProcesarProducto()` valida las acciones de alta, edición y baja y los campos de `productos`.
+- `ModeloProductos` consulta el catálogo y escribe código, descripción, categoría, stock, precio, ruta de imagen y dimensiones.
+- `vistas/modulos/productos.php` administra el catálogo; los productos asociados a pedidos no se pueden borrar por la clave foránea.
+
 ### Materiales
 
 - `ControladorMateriales::ctrProcesarMaterial()` valida acciones e identificadores, requiere tipo y proveedor válidos y procesa alta, edición y baja.
-- `ControladorMateriales::obtenerDatosValidos()` verifica los campos, límites de longitud y formato decimal del stock.
+- `ControladorMateriales::obtenerDatosValidos()` verifica los campos descriptivos, relaciones y límites de longitud.
 - `ModeloMateriales::mdlMostrarMateriales()` devuelve los datos del material con los nombres de su tipo y proveedor.
-- `mdlIngresarMaterial()`, `mdlEditarMaterial()` y `mdlBorrarMaterial()` escriben en la tabla `materiales`.
-- `vistas/modulos/materiales.php` muestra el formulario y permite seleccionar las relaciones obligatorias.
+- `mdlIngresarMaterial()` crea el material con stock inicial cero; `mdlEditarMaterial()` no sobrescribe existencias; `mdlBorrarMaterial()` impide borrar materiales con movimientos en kardex.
+- `vistas/modulos/materiales.php` muestra el formulario, permite seleccionar las relaciones obligatorias y presenta el stock como solo lectura.
 
-No se puede borrar un material que esté referenciado por un pedido si la base de datos no permite romper esa relación. En ese caso debe conservarse el registro o diseñarse una operación de archivado.
+Las existencias deben cambiar mediante movimientos registrados, no desde un formulario CRUD. Las claves foráneas también impiden borrar materiales asociados a pedidos; conserva o archiva esos registros.
 
 ### Herramientas y movimientos
 
@@ -177,16 +184,17 @@ Los movimientos se tratan como bitácora: la interfaz no permite editarlos ni el
 
 - `ControladorPedidos::ctrProcesarPedido()` despacha alta, edición, cambio de estado y baja; valida los identificadores, cantidades, precios y estado.
 - `obtenerDetalles()` convierte las líneas del formulario en datos validados para `detalle_pedido`.
-- `obtenerMateriales()` convierte los consumos opcionales en datos decimales validados.
+- `obtenerMateriales()` convierte los materiales planificados en datos decimales validados.
 - `ModeloPedidos::mdlMostrarPedidos()` carga pedidos, detalles, materiales y total pagado, y los agrupa por identificador de pedido.
-- `mdlCrearPedido()` calcula el total desde las líneas recibidas, crea el pedido y guarda detalles/consumos en una transacción.
-- `mdlEditarPedido()` bloquea el pedido, impide que el total nuevo quede por debajo de lo ya pagado, restaura consumos anteriores, guarda las nuevas líneas y descuenta los consumos nuevos, todo en una transacción.
-- `mdlCambiarEstado()` actualiza el estado usando una lista permitida por el controlador.
-- `mdlBorrarPedido()` restaura el stock consumido y elimina el pedido en una transacción. Las claves foráneas en cascada eliminan sus detalles y pagos asociados.
-- `calcularTotal()`, `registrarDetallesPedido()` y `registrarConsumoMateriales()` son funciones privadas del modelo para compartir esas tareas.
-- `vistas/modulos/pedidos.php` presenta el alta, listado, cambio de estado y formulario de edición.
+- `mdlCrearPedido()` calcula el total y guarda cabecera, productos y planificación; no modifica existencias.
+- `mdlEditarPedido()` comprueba que el total no quede por debajo de los pagos y actualiza productos/planificación sin tocar stock. Conserva las filas históricas `LEGACY`.
+- `mdlCambiarEstado()` cambia el estado sin ajustar inventario.
+- `mdlBorrarPedido()` impide borrar pedidos con pagos, planificación/materiales o movimientos asociados.
+- `mdlRegistrarConsumoMaterial()` bloquea las filas, valida stock, actualiza el saldo e inserta el kardex en la misma transacción.
+- `calcularTotal()`, `registrarDetallesPedido()`, `registrarMaterialesPlanificados()` y `aCentimos()` realizan tareas pequeñas reutilizables del modelo.
+- `vistas/modulos/pedidos.php` separa los materiales planificados de los consumos reales y proporciona el formulario de salida.
 
-Editar un pedido restaura los materiales consumidos anteriormente y luego aplica los consumos enviados en el formulario. La transacción hace que la operación completa se confirme o se revierta; no deja solo una parte aplicada.
+La salida real requiere aplicar primero `documentacion/Migraciones/2026-11-11-kardex-consumos-idempotentes.sql` en una base de pruebas. Los registros existentes quedan etiquetados `LEGACY`, porque el sistema no puede determinar automáticamente si eran planificación o consumo real.
 
 ### Pagos
 
@@ -220,7 +228,7 @@ En categorías se conservan algunos formularios heredados que procesan la acció
 
 Practica primero con una tabla sencilla y sigue este orden:
 
-1. **Entiende la tabla.** Lee su `CREATE TABLE`, tipos, claves primarias, valores por defecto y claves foráneas en `sistemainventario_v2.sql`.
+1. **Entiende la tabla.** Lee su `CREATE TABLE`, tipos, claves primarias, valores por defecto y claves foráneas en `sistemainventario_v3.sql`.
 2. **Define las acciones.** Escribe qué campos se listan y qué significa crear, editar y eliminar. Decide cómo se manejarán los registros relacionados.
 3. **Implementa el modelo.** Crea funciones de lectura/escritura con consultas prepas.
 4. **Implementa el controlador.** Lee `$_POST`, valida tipo, longitud, rango y campos obligatorios; prepara un radas. Usa una lista fija para nombres de tablas/campos; usa parámetros PDO para los valorearray limpio y llama al modelo. Muestra un error comprensible si la operación falla.
@@ -287,8 +295,7 @@ La IA no ve automáticamente los efectos de una operación sobre tus datos ni su
 
 - **Respaldo:** exporta la base antes de importar un dump, cambiar columnas o probar borrados.
 - **Credenciales:** no publiques el usuario/contraseña local de XAMPP; para producción usa credenciales de privilegio mínimo y configuración fuera del repositorio.
-- **Migración de datos:** no hay un proceso automático que copie productos, materiales o movimientos de un esquema anterior. Diseña y prueba una migración aparte si hay información que conservar.
-- **Productos:** hace falta una tabla/relación de productos si cada línea de pedido debe señalar un artículo concreto.
+- **Migración de datos:** no hay un proceso automático que copie productos, materiales o movimientos de un esquema anterior. El dump v3 también cambia la relación de las líneas de pedido; respalda la base y diseña una migración aparte si hay información de v2 que conservar.
 - **Acceso por perfiles:** las cuentas tienen un campo `perfil`, pero el sistema actual no restringe todas las operaciones según el perfil; iniciar sesión no equivale a tener permisos diferenciados.
 - **Protección de formularios:** antes de publicar, implementar protección CSRF en las operaciones POST y revisar las cargas de imágenes.
 - **Validación y errores:** mantener la validación tanto en el servidor como en el formulario; el navegador por sí solo no es una barrera.

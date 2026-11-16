@@ -4,8 +4,18 @@ Este directorio reúne las guías, informes y registros de trabajo del sistema. 
 
 ## Documentos actuales
 
+- [Resumen general del proyecto](./00_Resumen_General_Proyecto.md), [conexión PDO](./01_Conexion_PDO.md) y [arquitectura MVC](./02_Arquitectura_MVC.md): fundamentos para comenzar.
+- Tutoriales implementados: [pedidos](./03_Modulo_Pedidos.md), [materiales](./04_Modulo_Materiales.md) y [kardex](./05_Kardex_Inventario.md).
+- [Guía para programar sin IA](./13_Guia_para_Programar_Sin_IA.md): tutorial básico del flujo MVC, validación y PDO.
+- [Diagnóstico y corrección de CRUD](./15_DIAGNOSTICO_Y_CORRECCION_CRUD.md): hallazgos, cambios y pruebas pendientes.
+- [Guía de inventario, compras, pagos, usuarios, auditoría y reportes](./16_Guia_Modulos_Inventario_Compras_Seguridad_Reportes.md): explicación MVC, consultas y ejercicios por módulo.
+- [Cambios realizados](./14_Cambios_Realizados.md): registro por módulo y pendientes.
+- [Migración de idempotencia para kardex](./Migraciones/2026-11-11-kardex-consumos-idempotentes.sql): aplicar manualmente una sola vez, después de respaldar.
+- [Migración de compras, auditoría, pagos y recuperación](./Migraciones/2026-11-12-inventario-compras-seguridad.sql): requiere primero la migración anterior.
+- [Migración de idempotencia para pagos](./Migraciones/2026-11-15-pagos-idempotentes.sql): añade protección frente al reenvío duplicado de un pago.
 - [Guía del desarrollador](./GUIA_DESARROLLADOR.md): funcionamiento básico, instalación, herramientas, módulos y ejercicios de aprendizaje.
 - [Registro del 8 de noviembre de 2026](./2026-11-08-adaptacion-base-datos.md): cambios realizados al adaptar la aplicación al esquema nuevo.
+- [Registro del 9 de noviembre de 2026](./2026-11-09-adaptacion-sistemainventario-v3.md): actualización del sistema al esquema v3, catálogo de productos y stock en pedidos.
 
 ## Cómo registrar un día de trabajo
 
@@ -52,3 +62,5 @@ Explicación sencilla del recorrido de los datos o de la nueva regla.
 - Mantener los informes breves pero suficientemente claros para que otra persona pueda retomar el trabajo.
 
 La documentación ayuda a recordar decisiones, pero no sustituye al código, los comentarios necesarios, las pruebas ni una copia de seguridad.
+
+Las migraciones documentadas se aplicaron en `innomade_pruebas` para las pruebas funcionales; no se modificó la base original `sistemainventario_v3.2`.

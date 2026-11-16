@@ -6,6 +6,9 @@
   font-family: $type-2;
   padding: 0;
   width: $sidebar-width-lg;
+  max-height: calc(100vh - #{$navbar-height});
+  overflow-x: hidden;
+  overflow-y: auto;
   z-index: 11;
   transition: width $action-transition-duration $action-transition-timing-function, background $action-transition-duration $action-transition-timing-function;
   -webkit-transition: width $action-transition-duration $action-transition-timing-function, background $action-transition-duration $action-transition-timing-function;
@@ -113,11 +116,11 @@
         }
 
         .menu-icon {
-          display: none;
-          margin-right: 1.25rem;
+          display: inline-block;
+          margin-right: 0.75rem;
           width: $sidebar-icon-size;
           line-height: 1;
-          font-size: 18px;
+          font-size: 20px;
           color: $sidebar-light-menu-icon-color;
         }
 
@@ -125,9 +128,9 @@
           color: inherit;
           display: inline-block;
           font-size: $sidebar-menu-font-size;
-          line-height: 1;
+          line-height: 1.2;
           vertical-align: middle;
-          font-weight: 500;
+          font-weight: 600;
         }
 
         .badge {
@@ -151,19 +154,17 @@
       }
 
       &.nav-profile {
-        max-width: 270px;
-        margin-right: auto;
-        margin-left: auto;
-        margin-top: 30px;
-        margin-bottom: 30px;
+        width: 100%;
+        margin: 20px 0;
 
         .nav-link {
           display: flex;
+          align-items: center;
           border-radius: 3px;
           border: $sidebar-nav-item-profile-border-color;
           background-color: $sidebar-nav-item-profile-bg;
           color: $sidebar-nav-item-profile-color;
-          padding: 15px 25px;
+          padding: 14px 20px;
 
           .profile-image {
             margin-right: 15px;
@@ -177,15 +178,16 @@
           }
 
           .profile-name {
-            margin-bottom: 5px;
-            font-weight: 500;
-            font-size: 15px;
+            margin-bottom: 4px;
+            font-weight: 600;
+            font-size: 16px;
             color: $sidebar-profile-name-color;
           }
 
           .designation {
             margin-bottom: 0;
             font-weight: 400;
+            font-size: 14px;
             color: $sidebar-profile-designation-color;
           }
         }
@@ -194,9 +196,9 @@
       &.nav-category {
         color: $sidebar-light-category-color;
         border-bottom: 1px solid $sidebar-nav-category-border-color;
-        margin: 0 30px;
-        font-size: 15px;
-        font-weight: 500;
+        margin: 0 24px;
+        font-size: 16px;
+        font-weight: 600;
         padding: 10px 0px 15px 0px;
       }
     }
@@ -214,13 +216,7 @@
         &:before {
           content: "";
           position: absolute;
-          left: 30px;
-          right: 50%;
-          width: 10px;
-          height: 10px;
-          border-radius: 100%;
-          border: 2px solid $sidebar-nav-item-dot-color;
-          display: block;
+          display: none;
         }
       }
     }
@@ -238,7 +234,7 @@
           &:not(.nav-profile):not(.hover-open) {
             >.nav-link:not([aria-expanded="true"]) {
               background: $sidebar-light-menu-hover-bg;
-              padding-left: 65px;
+              padding-left: 34px;
 
               &:before {
                 border-color: $sidebar-light-menu-hover-color;

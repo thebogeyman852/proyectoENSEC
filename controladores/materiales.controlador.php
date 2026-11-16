@@ -17,6 +17,13 @@ class ControladorMateriales
         $idMaterial = filter_var($_POST["idMaterial"] ?? null, FILTER_VALIDATE_INT);
 
         try {
+            $token = $_POST["csrf_token"] ?? null;
+            if (
+                !is_string($token) ||
+                !hash_equals((string) ($_SESSION["csrf_token"] ?? ""), $token)
+            ) {
+                throw new InvalidArgumentException("La sesión del formulario venció. Recarga la página e inténtalo otra vez.");
+            }
             if ($accion === "eliminar") {
                 if ($idMaterial === false || $idMaterial < 1) {
                     throw new InvalidArgumentException("El material seleccionado no es válido.");
@@ -52,13 +59,11 @@ class ControladorMateriales
         $idProveedor = filter_var($entrada["idproveedor"] ?? null, FILTER_VALIDATE_INT);
         $nombre = trim((string) ($entrada["nombre"] ?? ""));
         $unidad = trim((string) ($entrada["unidad_medida"] ?? ""));
-        $stock = trim((string) ($entrada["stock_actual"] ?? ""));
 
         if (
             $idTipo === false || $idTipo < 1 || $idProveedor === false || $idProveedor < 1 ||
             $nombre === "" || mb_strlen($nombre) > 150 ||
-            $unidad === "" || mb_strlen($unidad) > 50 ||
-            !preg_match('/^\d{1,8}(?:\.\d{1,2})?$/', $stock)
+            $unidad === "" || mb_strlen($unidad) > 50
         ) {
             return false;
         }
@@ -67,8 +72,7 @@ class ControladorMateriales
             "idtipo_material" => $idTipo,
             "idproveedor" => $idProveedor,
             "nombre" => $nombre,
-            "unidad_medida" => $unidad,
-            "stock_actual" => $stock
+            "unidad_medida" => $unidad
         );
     }
 

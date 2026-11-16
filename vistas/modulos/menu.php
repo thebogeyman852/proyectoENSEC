@@ -1,4 +1,8 @@
- <nav class="sidebar sidebar-offcanvas" id="sidebar">
+<?php
+$fotoUsuario = trim((string) ($_SESSION["foto"] ?? ""));
+$fotoUsuarioDisponible = $fotoUsuario !== "" && is_file($fotoUsuario);
+?>
+<nav class="sidebar sidebar-offcanvas" id="sidebar">
   <ul class="nav">
     
     <!-- Perfil rápido en el menú lateral (opcional pero limpio) -->
@@ -6,10 +10,10 @@
       <a href="#" class="nav-link">
         <div class="profile-image">
           <?php
-          if($_SESSION["foto"] != ""){
-            echo '<img class="img-xs rounded-circle" src="'.$_SESSION["foto"].'" alt="profile image">';
+          if ($fotoUsuarioDisponible) {
+            echo '<img class="img-xs rounded-circle" src="' . htmlspecialchars($fotoUsuario, ENT_QUOTES, "UTF-8") . '" alt="Foto de perfil">';
           }else{
-            echo '<img class="img-xs rounded-circle" src="vistas/img/usuarios/default/anonymous.png" alt="profile image">';
+            echo '<i class="mdi mdi-account-circle" style="font-size:32px; color:#fff" aria-hidden="true"></i>';
           }
           ?>
           <div class="dot-indicator bg-success"></div>
@@ -45,6 +49,13 @@
       <a class="nav-link" href="index.php?ruta=categorias">
         <i class="menu-icon mdi mdi-folder-outline"></i>
         <span class="menu-title">Categorías</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link" href="index.php?ruta=productos">
+        <i class="menu-icon mdi mdi-cube"></i>
+        <span class="menu-title">Productos</span>
       </a>
     </li>
 
@@ -85,12 +96,31 @@
         <span class="menu-title">Pagos</span>
       </a>
     </li>
-
-    <!-- OPCIÓN: REGISTRO DE MOVIMIENTOS -->
     <li class="nav-item">
-      <a class="nav-link" href="index.php?ruta=movimientos">
+      <a class="nav-link" href="index.php?ruta=compras">
+        <i class="menu-icon mdi mdi-cart"></i>
+        <span class="menu-title">Compras</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="index.php?ruta=reportes">
+        <i class="menu-icon mdi mdi-chart-bar"></i>
+        <span class="menu-title">Reportes</span>
+      </a>
+    </li>
+    <?php if (($_SESSION["perfil"] ?? "") === "Administrador") { ?>
+    <li class="nav-item">
+      <a class="nav-link" href="index.php?ruta=auditoria">
+        <i class="menu-icon mdi mdi-clipboard-text"></i>
+        <span class="menu-title">Auditoría</span>
+      </a>
+    </li>
+    <?php } ?>
+
+    <li class="nav-item">
+      <a class="nav-link" href="index.php?ruta=inventario">
         <i class="menu-icon mdi mdi-swap-horizontal"></i>
-        <span class="menu-title">Inventario</span>
+        <span class="menu-title">Kardex e inventario</span>
       </a>
     </li>
 

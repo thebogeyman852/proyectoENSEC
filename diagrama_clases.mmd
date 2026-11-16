@@ -4,6 +4,7 @@ classDiagram
     class ControladorPlantilla
     class ControladorUsuarios
     class ControladorCategorias
+    class ControladorProductos
     class ControladorCatalogos
     class ControladorMateriales
     class ControladorHerramientas
@@ -13,6 +14,7 @@ classDiagram
 
     class ModeloUsuarios
     class ModeloCategorias
+    class ModeloProductos
     class ModeloCatalogos
     class ModeloMateriales
     class ModeloHerramientas
@@ -38,6 +40,22 @@ classDiagram
         nombre
         descripcion
     }
+    class Producto {
+        <<tabla productos>>
+        idproducto
+        idcategoria
+        codigo
+        descripcion
+        stock
+        precio_venta
+        imagen
+        ancho
+        alto
+        profundidad
+        largo
+        espesor
+        peso
+    }
     class Cliente {
         <<tabla>>
         idcliente
@@ -58,7 +76,7 @@ classDiagram
         <<tabla>>
         iddetalle_pedido
         idpedido
-        idcategoria
+        idproducto
         cantidad
         precio_unitario
     }
@@ -118,6 +136,7 @@ classDiagram
 
     ControladorUsuarios ..> ModeloUsuarios
     ControladorCategorias ..> ModeloCategorias
+    ControladorProductos ..> ModeloProductos
     ControladorCatalogos ..> ModeloCatalogos
     ControladorMateriales ..> ModeloMateriales
     ControladorHerramientas ..> ModeloHerramientas
@@ -127,6 +146,7 @@ classDiagram
 
     ModeloUsuarios ..> Conexion
     ModeloCategorias ..> Conexion
+    ModeloProductos ..> Conexion
     ModeloCatalogos ..> Conexion
     ModeloMateriales ..> Conexion
     ModeloHerramientas ..> Conexion
@@ -137,7 +157,8 @@ classDiagram
     Pedido "0..*" --> "1" Usuario : idusuario
     Pedido "0..*" --> "1" Cliente : idcliente
     DetallePedido "0..*" --> "1" Pedido : idpedido
-    DetallePedido "0..*" --> "1" Categoria : idcategoria
+    Producto "0..*" --> "1" Categoria : idcategoria
+    DetallePedido "0..*" --> "1" Producto : idproducto
     Pago "0..*" --> "1" Pedido : idpedido
     Material "0..*" --> "1" TipoMaterial : idtipo_material
     Material "0..*" --> "1" Proveedor : idproveedor

@@ -17,7 +17,7 @@ $boxed-layout-bg: lighten(color(gray), 50%);
 ////////// COLOR VARIABLES //////////
 
 ////////// SIDEBAR ////////
-$sidebar-width-lg: 270px;
+$sidebar-width-lg: 300px;
 $sidebar-width-mini: 185px;
 $sidebar-width-icon: 70px;
 $sidebar-light-bg: $white;
@@ -62,11 +62,11 @@ $sidebar-dark-category-color: #999999;
 $sidebar-dark-menu-icon-color: #9F9EA3;
 $sidebar-dark-profile-name-color: #404852;
 $sidebar-dark-profile-title-color: #8d9498;
-$sidebar-menu-font-size: 15px;
-$sidebar-icon-size: 16px;
-$sidebar-menu-padding: 15px 30px 15px 55px;
+$sidebar-menu-font-size: 17px;
+$sidebar-icon-size: 22px;
+$sidebar-menu-padding: 14px 24px;
 $sidebar-menu-padding-rtl: 15px 70px 15px 30px;
-$nav-link-height: 52px;
+$nav-link-height: 54px;
 $sidebar-submenu-padding: 0 0 0 4rem;
 $sidebar-submenu-font-size: $sidebar-menu-font-size;
 $sidebar-submenu-item-padding: .75rem 1rem;

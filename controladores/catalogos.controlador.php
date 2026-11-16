@@ -23,6 +23,13 @@ class ControladorCatalogos
         $id = filter_var($_POST["idCatalogo"] ?? null, FILTER_VALIDATE_INT);
 
         try {
+            $token = $_POST["csrf_token"] ?? null;
+            if (
+                !is_string($token) ||
+                !hash_equals((string) ($_SESSION["csrf_token"] ?? ""), $token)
+            ) {
+                throw new InvalidArgumentException("La sesión del formulario venció. Recarga la página e inténtalo otra vez.");
+            }
             if ($accion === "eliminar") {
                 if ($id === false || $id < 1) {
                     throw new InvalidArgumentException("El registro seleccionado no es válido.");
@@ -42,9 +49,12 @@ class ControladorCatalogos
                     $limite = $recurso === "tipos-material" && $campo === "nombre"
                         ? 100
                         : $limites[$campo];
+                    $longitud = $recurso === "tipos-material" && $campo === "descripcion"
+                        ? strlen($datos[$campo])
+                        : mb_strlen($datos[$campo]);
                     if (
                         (($campo === "nombre" || $campo === "nombre_proveedor") && $datos[$campo] === "") ||
-                        mb_strlen($datos[$campo]) > $limite
+                        $longitud > $limite
                     ) {
                         throw new InvalidArgumentException("Revisa los campos del formulario; algún valor excede el límite permitido.");
                     }

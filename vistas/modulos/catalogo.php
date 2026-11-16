@@ -43,6 +43,7 @@ $escaparCatalogo = static function ($valor) {
         <?php } ?>
         <form method="post" class="form-inline mb-4">
           <input type="hidden" name="accionCatalogo" value="crear">
+          <input type="hidden" name="csrf_token" value="<?php echo $escaparCatalogo($_SESSION["csrf_token"] ?? ""); ?>">
           <?php foreach ($configuracion["campos"] as $campo => $etiqueta) { ?>
             <label class="sr-only" for="nuevo-<?php echo $escaparCatalogo($campo); ?>"><?php echo $escaparCatalogo($etiqueta); ?></label>
             <input
@@ -82,11 +83,13 @@ $escaparCatalogo = static function ($valor) {
                     <form id="<?php echo $formId; ?>" method="post">
                       <input type="hidden" name="accionCatalogo" value="editar">
                       <input type="hidden" name="idCatalogo" value="<?php echo (int) $registro[$configuracion["id"]]; ?>">
+                      <input type="hidden" name="csrf_token" value="<?php echo $escaparCatalogo($_SESSION["csrf_token"] ?? ""); ?>">
                       <button type="submit" class="btn btn-warning btn-sm">Guardar</button>
                     </form>
                     <form method="post" onsubmit="return confirm('¿Eliminar este registro?');">
                       <input type="hidden" name="accionCatalogo" value="eliminar">
                       <input type="hidden" name="idCatalogo" value="<?php echo (int) $registro[$configuracion["id"]]; ?>">
+                      <input type="hidden" name="csrf_token" value="<?php echo $escaparCatalogo($_SESSION["csrf_token"] ?? ""); ?>">
                       <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
                     </form>
                   </td>

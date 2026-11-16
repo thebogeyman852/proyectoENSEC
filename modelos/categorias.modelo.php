@@ -1,73 +1,134 @@
 <?php
 
 require_once "conexion.php";
+require_once "auditoria.modelo.php";
 
 class ModeloCategorias {
 
-    // =INGRESAR CATEGORÍA
     static public function mdlIngresarCategoria($tabla, $datos) {
-        $stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, descripcion) VALUES (:nombre, :descripcion)");
-
-        $stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
-        $stmt->bindParam(":descripcion", $datos["descripcion"], PDO::PARAM_STR);
-
-        if ($stmt->execute()) {
-            return "ok";
-        } else {
-            return "error";
+        self::validarTabla($tabla);
+        $conexion = Conexion::conectar();
+        $conexion->beginTransaction();
+        try {
+        $stmt = $conexion->prepare(
+            "INSERT INTO categoria (nombre, descripcion) VALUES (:nombre, :descripcion)"
+        );
+        $stmt->execute(array(
+            ":nombre" => $datos["nombre"],
+            ":descripcion" => $datos["descripcion"]
+        ));
+        $id = (int) $conexion->lastInsertId();
+        ModeloAuditoria::mdlRegistrar($conexion, array(
+            "id_usuario" => $_SESSION["idusuario"] ?? null,
+            "accion" => "crear",
+            "modulo" => "categorias",
+            "tabla" => "categoria",
+            "id_registro" => $id,
+            "anteriores" => null,
+            "nuevos" => $datos
+        ));
+        $conexion->commit();
+        return "ok";
+        } catch (Throwable $error) {
+            if ($conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            throw $error;
         }
-
-        $stmt->close();
-        $stmt = null;
     }
 
-    // =MOSTRAR CATEGORÍAS
     static public function mdlMostrarCategorias($tabla, $item, $valor) {
-        if ($item != null) {
-            $stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item");
-            $stmt->bindParam(":" . $item, $valor, PDO::PARAM_STR);
+        self::validarTabla($tabla);
+        if ($item !== null) {
+            if (!in_array($item, array("idcategoria", "nombre"), true)) {
+                throw new InvalidArgumentException("Campo de búsqueda no válido.");
+            }
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM categoria WHERE $item = :valor");
+            $stmt->bindValue(":valor", $valor);
             $stmt->execute();
-            return $stmt->fetch();
-        } else {
-            $stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla");
-            $stmt->execute();
-            return $stmt->fetchAll();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
         }
 
-        $stmt->close();
-        $stmt = null;
+        $stmt = Conexion::conectar()->query("SELECT * FROM categoria ORDER BY idcategoria DESC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // =EDITAR CATEGORÍA
     static public function mdlEditarCategoria($tabla, $datos) {
-        $stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre = :nombre, descripcion = :descripcion WHERE idcategoria = :idcategoria");
-
-        $stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
-        $stmt->bindParam(":descripcion", $datos["descripcion"], PDO::PARAM_STR);
-        $stmt->bindParam(":idcategoria", $datos["idcategoria"], PDO::PARAM_INT);
-
-        if ($stmt->execute()) {
-            return "ok";
-        } else {
-            return "error";
+        self::validarTabla($tabla);
+        $conexion = Conexion::conectar();
+        $conexion->beginTransaction();
+        try {
+        $anterior = $conexion->prepare("SELECT nombre, descripcion FROM categoria WHERE idcategoria = :id FOR UPDATE");
+        $anterior->execute(array(":id" => $datos["idcategoria"]));
+        $datosAnteriores = $anterior->fetch(PDO::FETCH_ASSOC);
+        if (!$datosAnteriores) {
+            throw new InvalidArgumentException("La categoría seleccionada no existe.");
         }
-
-        $stmt->close();
-        $stmt = null;
+        $stmt = $conexion->prepare(
+            "UPDATE categoria SET nombre = :nombre, descripcion = :descripcion
+             WHERE idcategoria = :idcategoria"
+        );
+        $stmt->execute(array(
+            ":nombre" => $datos["nombre"],
+            ":descripcion" => $datos["descripcion"],
+            ":idcategoria" => $datos["idcategoria"]
+        ));
+        ModeloAuditoria::mdlRegistrar($conexion, array(
+            "id_usuario" => $_SESSION["idusuario"] ?? null,
+            "accion" => "editar",
+            "modulo" => "categorias",
+            "tabla" => "categoria",
+            "id_registro" => $datos["idcategoria"],
+            "anteriores" => $datosAnteriores,
+            "nuevos" => array("nombre" => $datos["nombre"], "descripcion" => $datos["descripcion"])
+        ));
+        $conexion->commit();
+        return "ok";
+        } catch (Throwable $error) {
+            if ($conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            throw $error;
+        }
     }
 
-    // =BORRAR CATEGORÍA
     static public function mdlBorrarCategoria($tabla, $datos) {
-        $stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE idcategoria = :idcategoria");
-        $stmt->bindParam(":idcategoria", $datos, PDO::PARAM_INT);
-
-        if ($stmt->execute()) {
+        self::validarTabla($tabla);
+        $conexion = Conexion::conectar();
+        $conexion->beginTransaction();
+        try {
+            $anterior = $conexion->prepare("SELECT nombre, descripcion FROM categoria WHERE idcategoria = :id FOR UPDATE");
+            $anterior->execute(array(":id" => $datos));
+            $registro = $anterior->fetch(PDO::FETCH_ASSOC);
+            if (!$registro) {
+                throw new InvalidArgumentException("La categoría seleccionada no existe.");
+            }
+            $stmt = $conexion->prepare("DELETE FROM categoria WHERE idcategoria = :idcategoria");
+            $stmt->bindValue(":idcategoria", $datos, PDO::PARAM_INT);
+            $stmt->execute();
+            ModeloAuditoria::mdlRegistrar($conexion, array(
+                "id_usuario" => $_SESSION["idusuario"] ?? null,
+                "accion" => "eliminar",
+                "modulo" => "categorias",
+                "tabla" => "categoria",
+                "id_registro" => $datos,
+                "anteriores" => $registro,
+                "nuevos" => null
+            ));
+            $conexion->commit();
             return "ok";
-        } else {
-            return "error";
+        } catch (Throwable $error) {
+            if ($conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            throw $error;
         }
+    }
 
-        $stmt->close();
-        $stmt = null;
+    private static function validarTabla($tabla)
+    {
+        if ($tabla !== "categoria") {
+            throw new InvalidArgumentException("Tabla de categorías no válida.");
+        }
     }
 }

@@ -28,6 +28,7 @@ $escaparMaterial = static function ($valor) {
         <?php } else { ?>
         <form method="post" class="form-row">
           <input type="hidden" name="accionMaterial" value="crear">
+          <input type="hidden" name="csrf_token" value="<?php echo $escaparMaterial($_SESSION["csrf_token"] ?? ""); ?>">
           <div class="form-group col-md-3">
             <label for="material-nombre">Nombre</label>
             <input id="material-nombre" class="form-control" name="nombre" maxlength="150" required>
@@ -50,15 +51,14 @@ $escaparMaterial = static function ($valor) {
               <?php } ?>
             </select>
           </div>
-          <div class="form-group col-md-1">
+          <div class="form-group col-md-2">
             <label for="material-unidad">Unidad</label>
             <input id="material-unidad" class="form-control" name="unidad_medida" maxlength="50" required>
           </div>
-          <div class="form-group col-md-2">
-            <label for="material-stock">Stock inicial</label>
-            <input id="material-stock" type="number" class="form-control" name="stock_actual" min="0" max="99999999.99" step="0.01" value="0" required>
+          <div class="col-12">
+            <p class="text-muted">El material se crea con stock cero. Las existencias se modifican mediante movimientos registrados en el kardex.</p>
+            <button class="btn btn-primary" type="submit">Guardar material</button>
           </div>
-          <div class="col-12"><button class="btn btn-primary" type="submit">Guardar material</button></div>
         </form>
         <?php } ?>
       </div>
@@ -88,16 +88,18 @@ $escaparMaterial = static function ($valor) {
                   </select>
                 </td>
                 <td><input class="form-control" name="unidad_medida" form="<?php echo $formId; ?>" value="<?php echo $escaparMaterial($material["unidad_medida"]); ?>" maxlength="50" required></td>
-                <td><input type="number" class="form-control" name="stock_actual" form="<?php echo $formId; ?>" value="<?php echo $escaparMaterial($material["stock_actual"]); ?>" min="0" max="99999999.99" step="0.01" required></td>
+                <td><?php echo $escaparMaterial($material["stock_actual"]); ?></td>
                 <td>
                   <form id="<?php echo $formId; ?>" method="post">
                     <input type="hidden" name="accionMaterial" value="editar">
                     <input type="hidden" name="idMaterial" value="<?php echo (int) $material["idmaterial"]; ?>">
+                    <input type="hidden" name="csrf_token" value="<?php echo $escaparMaterial($_SESSION["csrf_token"] ?? ""); ?>">
                     <button class="btn btn-warning btn-sm" type="submit">Guardar</button>
                   </form>
                   <form method="post" onsubmit="return confirm('¿Eliminar este material?');">
                     <input type="hidden" name="accionMaterial" value="eliminar">
                     <input type="hidden" name="idMaterial" value="<?php echo (int) $material["idmaterial"]; ?>">
+                    <input type="hidden" name="csrf_token" value="<?php echo $escaparMaterial($_SESSION["csrf_token"] ?? ""); ?>">
                     <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
                   </form>
                 </td>

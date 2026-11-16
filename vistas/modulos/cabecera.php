@@ -1,3 +1,7 @@
+<?php
+$fotoUsuario = trim((string) ($_SESSION["foto"] ?? ""));
+$fotoUsuarioDisponible = $fotoUsuario !== "" && is_file($fotoUsuario);
+?>
 <nav class="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
   <!-- LOGOTIPO / MARCA -->
   <div class="text-center navbar-brand-wrapper d-flex align-items-top justify-content-center">
@@ -23,10 +27,10 @@
       <li class="nav-item dropdown d-none d-xl-inline-block user-dropdown">
         <a class="nav-link dropdown-toggle" id="UserDropdown" href="#" data-toggle="dropdown" aria-expanded="false">
           <?php
-          if(isset($_SESSION["foto"]) && $_SESSION["foto"] != ""){
-            echo '<img class="img-xs rounded-circle" src="'.$_SESSION["foto"].'" alt="Profile image">';
+          if ($fotoUsuarioDisponible) {
+            echo '<img class="img-xs rounded-circle" src="' . htmlspecialchars($fotoUsuario, ENT_QUOTES, "UTF-8") . '" alt="Foto de perfil">';
           } else {
-            echo '<img class="img-xs rounded-circle" src="vistas/img/usuarios/default/anonymous.png" alt="Profile image">';
+            echo '<i class="mdi mdi-account-circle" style="font-size:32px; color:#64748b" aria-hidden="true"></i>';
           }
           ?>
         </a>
@@ -35,10 +39,10 @@
           <!-- Encabezado del Dropdown con datos reales de la sesión -->
           <div class="dropdown-header text-center">
             <?php
-            if(isset($_SESSION["foto"]) && $_SESSION["foto"] != ""){
-              echo '<img class="img-md rounded-circle mb-2" src="'.$_SESSION["foto"].'" alt="Profile image">';
+            if ($fotoUsuarioDisponible) {
+              echo '<img class="img-md rounded-circle mb-2" src="' . htmlspecialchars($fotoUsuario, ENT_QUOTES, "UTF-8") . '" alt="Foto de perfil">';
             } else {
-              echo '<img class="img-md rounded-circle mb-2" src="vistas/img/usuarios/default/anonymous.png" alt="Profile image">';
+              echo '<i class="mdi mdi-account-circle mb-2" style="font-size:64px; color:#64748b" aria-hidden="true"></i>';
             }
             ?>
             <p class="mb-1 mt-2 font-weight-semibold"><?php echo isset($_SESSION["nombre"]) ? $_SESSION["nombre"] : "Usuario"; ?></p>
